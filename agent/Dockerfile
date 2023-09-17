@@ -1,4 +1,4 @@
-# Stage 1
+# Builder
 FROM allegroai/clearml-agent:latest AS builder
 
 RUN apt-get install -y --no-install-recommends wget && \
@@ -18,35 +18,28 @@ RUN apt-get update && \
     cd .. && \
     rm -rf Python-3.10.0 Python-3.10.0.tgz
 
-# Install Python packages
 COPY requirements.txt .
-RUN python3.10 -m pip install --no-cache-dir -r requirements.txt
+RUN python3.10 -m pip install --upgrade pip && \
+    python3.10 -m pip install -r requirements.txt
 
-# Stage 2
+# Final
 FROM allegroai/clearml-agent:latest
 
 # Remove Python3.6
 RUN apt-get remove -y --autoremove python3.6 && \
     apt-get clean
 
-# Copy Python 3.10 from builder
 COPY --from=builder /usr/local/bin/python3.10 /usr/local/bin/python3.10
 COPY --from=builder /usr/local/lib/python3.10 /usr/local/lib/python3.10
 
 # Make Python 3.10 the default Python version
 RUN ln -sf /usr/local/bin/python3.10 /usr/bin/python3
+ENV PYTHONPATH="/usr/local/lib/python3.10"
 
-# Set environment variables
-ENV CLEARML_AGENT_UPDATE_VERSION="==1.5.3rc2" \
-    CLEARML_AGENT_K8S_CPU_LIMIT="1" \
-    CLEARML_AGENT_K8S_CPU_REQUEST="1" \
-    CLEARML_AGENT_DEFAULT_QUEUE="default" \
-    CLEARML_DOCKER_SKIP_GPUS_FLAG=1 \
-    PIP_UPDATE_VERSION="==23.2.1"
-
-COPY clearml.conf /root/clearml.conf
 COPY entrypoint.sh /usr/agent/entrypoint.sh
 RUN chmod +x /usr/agent/entrypoint.sh
 
-# Set the new entrypoint
+RUN useradd -m clearml-agent
+USER clearml-agent
+
 ENTRYPOINT ["/usr/agent/entrypoint.sh"]

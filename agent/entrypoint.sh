@@ -6,15 +6,14 @@ LOWER_CLEARML_AGENT_UPDATE_VERSION="$(echo "${CLEARML_AGENT_UPDATE_VERSION:-$TRA
 if [ "$LOWER_PIP_UPDATE_VERSION" = "yes" ] || [ "$LOWER_PIP_UPDATE_VERSION" = "true" ] ; then
     python3 -m pip install -U pip
 elif [ ! -z "$LOWER_PIP_UPDATE_VERSION" ] ; then
-    python3 -m pip install pip$LOWER_PIP_UPDATE_VERSION ;
+    python3 -m pip install pip==$LOWER_PIP_UPDATE_VERSION ;
 fi
 
 echo "CLEARML_AGENT_UPDATE_VERSION = $LOWER_CLEARML_AGENT_UPDATE_VERSION"
 if [ "$LOWER_CLEARML_AGENT_UPDATE_VERSION" = "yes" ] || [ "$LOWER_CLEARML_AGENT_UPDATE_VERSION" = "true" ] ; then
     python3 -m pip install clearml-agent -U
 elif [ ! -z "$LOWER_CLEARML_AGENT_UPDATE_VERSION" ] ; then
-    python3 -m pip install clearml-agent$LOWER_CLEARML_AGENT_UPDATE_VERSION ;
+    python3 -m pip install clearml-agent==$LOWER_CLEARML_AGENT_UPDATE_VERSION ;
 fi
 
-python3 -m clearml_agent init
 python3 -m clearml_agent daemon --force-current-version --foreground
