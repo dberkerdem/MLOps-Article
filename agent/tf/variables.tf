@@ -32,3 +32,8 @@ variable "security_group_id" {
   description = "The Security Group ID to associate with the EC2 instance"
   type        = string
 }
+
+variable "docker_image" {
+  description = Name of the docker image to be used as agent
+  type        = string
+}
