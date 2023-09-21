@@ -1,12 +1,14 @@
 #!/bin/bash
 
+AGENT_MODE="agent_plain"  # Default value
+
 function deploy_agent() {
   INSTANCE_NAME="clearml-agent-$1"
-  STATE_DIR="${PWD}/agent/tf/states/${INSTANCE_NAME}"
+  STATE_DIR="${PWD}/${AGENT_MODE}/tf/states/${INSTANCE_NAME}"
 
   mkdir -p "${STATE_DIR}"
 
-  cd ./agent/tf || exit
+  cd ./${AGENT_MODE}/tf || exit
 
   terraform init -backend-config="path=${STATE_DIR}/${INSTANCE_NAME}.tfstate"
 
@@ -30,6 +32,9 @@ while [[ "$#" -gt 0 ]]; do
     case $1 in
         --num-agents)
             NUM_AGENTS="$2"
+            shift ;;
+        --agent-mode)
+            AGENT_MODE="$2"
             shift ;;
         *) 
             echo "Unknown parameter passed: $1"

@@ -28,3 +28,7 @@ variable "security_group_id" {
   type        = string
 }
 
+variable "clearml_agent_update_version" {
+  description = "Version of clearml-agent python package to be used"
+  type        = string
+}

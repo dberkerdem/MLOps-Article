@@ -9,9 +9,8 @@
   }
 
   locals {
-    env_content_lines = [for line in split("\n", file("../.env")) : 
-                          starts_with(line, "#") || length(trim(line)) == 0 ? "" : "export ${line}"
-                        ]
+  env_content_lines = [for line in split("\n", file("../.env")) :
+                      substr(line, 0, 1) == "#" || length(trimspace(line)) == 0 ? "" : "export ${line}"]
     env_content = join("\n", local.env_content_lines)
   }
 
@@ -40,11 +39,12 @@
 
                 sudo yum update -y
                 sudo yum install -y python3-pip
-                sudo pip3 install --upgrade pip==${PIP_UPDATE_VERSION}
-                sudo pip3 install clearml-agent==${CLEARML_AGENT_UPDATE_VERSION}
+                sudo pip install --upgrade pip
+                sudo pip install clearml-agent==${var.clearml_agent_update_version}"
 
                 sudo python3 -m clearml_agent daemon --force-current-version --detached
                 EOF
+
 
     tags = {
       Name = var.instance_name
