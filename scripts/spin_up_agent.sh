@@ -6,9 +6,9 @@ function deploy_agent() {
 
   mkdir -p "${STATE_DIR}"
 
-  cd ./agent/tf || exit
+  cd ${STATE_DIR} || exit
 
-  terraform init -migrate-state -backend-config="path=${STATE_DIR}/${INSTANCE_NAME}.tfstate"
+  terraform init -backend-config="path=./${INSTANCE_NAME}.tfstate"
 
   if ! terraform validate; then
     echo "Terraform validation failed for ${INSTANCE_NAME}. Skipping..."
@@ -16,7 +16,7 @@ function deploy_agent() {
     return
   fi
 
-  terraform apply -auto-approve -var "instance_name=${INSTANCE_NAME}"
+  terraform apply -lock=false -auto-approve -var "instance_name=${INSTANCE_NAME}"
 
   cd - || exit
 }
