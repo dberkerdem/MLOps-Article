@@ -1,14 +1,14 @@
 #!/bin/bash
 
 function deploy_agent() {
-  INSTANCE_NAME="clearml-worker-$1"
-  STATE_DIR="./agent/tf/states/${INSTANCE_NAME}"
+  INSTANCE_NAME="clearml-agent-$1"
+  STATE_DIR="${PWD}/agent/tf/states/${INSTANCE_NAME}"
 
   mkdir -p "${STATE_DIR}"
 
-  cd ${STATE_DIR} || exit
+  cd ./agent/tf || exit
 
-  terraform init -backend-config="path=./${INSTANCE_NAME}.tfstate"
+  terraform init -backend-config="path=${STATE_DIR}/${INSTANCE_NAME}.tfstate"
 
   if ! terraform validate; then
     echo "Terraform validation failed for ${INSTANCE_NAME}. Skipping..."
@@ -16,7 +16,8 @@ function deploy_agent() {
     return
   fi
 
-  terraform apply -lock=false -auto-approve -var "instance_name=${INSTANCE_NAME}"
+  # Apply the Terraform configuration
+  terraform apply -lock=false -auto-approve -var "instance_name=${INSTANCE_NAME}" -state="${STATE_DIR}/${INSTANCE_NAME}.tfstate"
 
   cd - || exit
 }

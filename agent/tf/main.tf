@@ -12,7 +12,7 @@
     env_content = file("../.env")
   }
 
-  resource "aws_instance" "my_instance" {
+  resource "aws_instance" "clearml_agent" {
     ami           = "ami-0648880541a3156f7"
     instance_type = var.instance_type
     
