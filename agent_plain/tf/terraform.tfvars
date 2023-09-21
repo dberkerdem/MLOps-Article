@@ -1,0 +1,5 @@
+instance_type       = "t3.medium"
+security_group_name = "launch-wizard-2"
+security_group_id = "sg-08cd3ce3c53244046"
+key_name            = "test_1"
+region              = "eu-west-1"
