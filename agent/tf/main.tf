@@ -15,30 +15,40 @@ resource "aws_instance" "my_instance" {
   vpc_security_group_ids = [var.security_group_id]
 
   user_data = <<-EOF
-    #!/bin/bash
+      #!/bin/bash
 
-    # Log file for debugging
-    exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+      # Log file for debugging
+      exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
-    sudo yum update -y
-    sudo yum install docker -y
-    sudo service docker start
-    sudo usermod -a -G docker ec2-user
-    sudo chkconfig docker on
-    sudo yum install -y git
+      sudo yum update -y
+      sudo yum install docker -y
+      sudo service docker start
+      sudo usermod -a -G docker ec2-user
+      sudo chkconfig docker on
+      sudo yum install -y git
 
-    # Clone the repo
-    git clone ${var.repo_url}
-    if [ $? -ne 0 ]; then
-        echo "Failed to clone the repo"
-        exit 1
-    fi
+      # Small delay to ensure network stability and Docker daemon readiness
+      sleep 30
 
-    cd MLOps-Article
-    echo '${local.env_content}' > ./agent/.env
+      # Clone the repo
+      git clone ${var.repo_url}
+      if [ $? -ne 0 ]; then
+          echo "Failed to clone the repo"
+          exit 1
+      fi
 
-    sudo chmod +x scripts/*
-    ./scripts/run_workers.sh --num-workers 1 --image-name dberkerdem/clearml-agent-custom
+      cd MLOps-Article
+      echo '${local.env_content}' > ./agent/.env
+
+      sudo chmod +x scripts/*
+
+      # Retry Docker pull for 3 times with a 10-second interval if it fails
+      for i in {1..3}; do
+          docker pull dberkerdem/clearml-agent-custom && break
+          sleep 10
+      done
+
+      ./scripts/run_workers.sh --num-workers 1 --image-name dberkerdem/clearml-agent-custom
   EOF
 
 
