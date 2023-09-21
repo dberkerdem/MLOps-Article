@@ -34,6 +34,6 @@ variable "security_group_id" {
 }
 
 variable "docker_image" {
-  description = Name of the docker image to be used as agent
+  description = "Name of the docker image to be used as agent"
   type        = string
 }
