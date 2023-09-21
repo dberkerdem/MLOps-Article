@@ -1,5 +1,28 @@
 #!/bin/bash
 
+function deploy_agent() {
+  INSTANCE_NAME="clearml-worker-$1"
+  STATE_DIR="./agent/tf/states/${INSTANCE_NAME}"
+
+  mkdir -p "${STATE_DIR}"
+
+  cd ./agent/tf || exit
+
+  terraform init -migrate-state -backend-config="path=${STATE_DIR}/${INSTANCE_NAME}.tfstate"
+
+  if ! terraform validate; then
+    echo "Terraform validation failed for ${INSTANCE_NAME}. Skipping..."
+    cd - || exit
+    return
+  fi
+
+  terraform apply -auto-approve -var "instance_name=${INSTANCE_NAME}"
+
+  cd - || exit
+}
+
+export -f deploy_agent
+
 NUM_AGENTS=0
 
 while [[ "$#" -gt 0 ]]; do
@@ -19,22 +42,5 @@ if [ "$NUM_AGENTS" -eq 0 ]; then
   exit 1
 fi
 
-for i in $(seq 0 $(($NUM_AGENTS - 1))); do
-  # Define the instance name based on the loop index
-  INSTANCE_NAME="clearml-worker-$i"
-
-  # Navigate to the directory containing the Terraform files
-  cd ./agent/tf
-
-  # Initialize Terraform
-  terraform init
-
-  # Validate the Terraform files
-  terraform validate
-
-  # Apply the Terraform configuration
-  terraform apply -auto-approve -var "instance_name=${INSTANCE_NAME}"
-
-  # Navigate back to the original directory (important if you're running this in a loop)
-  cd -
-done
+# Use xargs to parallelize
+seq 0 $(($NUM_AGENTS - 1)) | xargs -I {} -P $NUM_AGENTS bash -c 'deploy_agent "$@"' _ {}
