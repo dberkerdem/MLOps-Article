@@ -38,8 +38,7 @@ resource "aws_instance" "my_instance" {
     echo '${local.env_content}' > ./agent/.env
 
     sudo chmod +x scripts/*
-    ./scripts/build_agent_image.sh
-    ./scripts/run_workers.sh --num-workers 1
+    ./scripts/run_workers.sh --num-workers 1 --image-name dberkerdem/clearml-agent-custom
   EOF
 
 
