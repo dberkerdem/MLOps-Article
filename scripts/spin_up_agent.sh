@@ -20,7 +20,7 @@ function deploy_agent() {
   fi
 
   # Apply the Terraform configuration
-  terraform apply -lock=false -auto-approve -var "instance_name=${INSTANCE_NAME}" -state="${STATE_DIR}/${INSTANCE_NAME}.tfstate"
+  terraform apply -lock=false -auto-approve -var-file="common.tfvars" -var "instance_name=${INSTANCE_NAME}" -state="${STATE_DIR}/${INSTANCE_NAME}.tfstate"
 
   cd - || exit
 }

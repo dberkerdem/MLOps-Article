@@ -8,11 +8,8 @@
     region = var.region
   }
 
-  data "aws_secretsmanager_secret_version" "my_secret" {
-    secret_id = "name_or_arn_of_your_secret"
-  }
   locals {
-    clearml_conf = file("../clearml.conf")
+    clearml_conf_content = file("../clearml.conf")
   }
 
 
@@ -33,11 +30,14 @@
     user_data = <<-EOF
                 #!/bin/bash
 
-                # Log file for debugging
+                # Log
                 exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
-
-                # Convert .env content into environment variables and export them
-                echo "${local.clearml_conf}" > /home/ec2-user/clearml.conf
+                
+                # Pass clearml.conf to ec2
+                cat > /home/ec2-user/clearml.conf <<CONF
+                ${local.clearml_conf_content}
+                CONF
+                chmod 600 /home/ec2-user/clearml.conf
 
                 sudo yum update -y
                 sudo yum install -y python3-pip
