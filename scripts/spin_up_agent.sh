@@ -11,7 +11,7 @@ function deploy_agent() {
 
   cd ./${mode}/tf || exit
 
-  terraform init -backend-config="path=${STATE_DIR}/${INSTANCE_NAME}.tfstate"
+  terraform init -reconfigure -backend-config="path=${STATE_DIR}/${INSTANCE_NAME}.tfstate"
 
   if ! terraform validate; then
     echo "Terraform validation failed for ${INSTANCE_NAME}. Skipping..."
