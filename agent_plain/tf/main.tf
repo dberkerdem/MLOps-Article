@@ -8,13 +8,22 @@ provider "aws" {
   region = var.region
 }
 
+data "aws_iam_role" "existing_role" {
+  name = "ec2-role-for-s3-read-only"
+}
+
+resource "aws_iam_instance_profile" "profile" {
+  name = var.instance_name + "_iam_instance_profile"
+  role = data.aws_iam_role.existing_role.name
+}
+
 resource "aws_instance" "clearml_agent" {
   ami           = var.ami
   instance_type = var.instance_type
   key_name      = var.key_name
   vpc_security_group_ids = [var.security_group_id]
 
-  iam_instance_profile = var.iam_instance_profile
+  iam_instance_profile = aws_iam_instance_profile.example.name
 
   ebs_block_device {
     device_name = "/dev/xvda"
