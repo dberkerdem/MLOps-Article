@@ -1,14 +1,15 @@
 #!/bin/bash
 
-AGENT_MODE="agent_plain"  # Default value
-
 function deploy_agent() {
-  INSTANCE_NAME="clearml-agent-$1"
-  STATE_DIR="${PWD}/${AGENT_MODE}/tf/states/${INSTANCE_NAME}"
+  local mode="$1"
+  local instance_number="$2"
+
+  INSTANCE_NAME="clearml-agent-${instance_number}"
+  STATE_DIR="${PWD}/${mode}/tf/states/${INSTANCE_NAME}"
 
   mkdir -p "${STATE_DIR}"
 
-  cd ./${AGENT_MODE}/tf || exit
+  cd ./${mode}/tf || exit
 
   terraform init -backend-config="path=${STATE_DIR}/${INSTANCE_NAME}.tfstate"
 
@@ -27,6 +28,7 @@ function deploy_agent() {
 export -f deploy_agent
 
 NUM_AGENTS=0
+AGENT_MODE="agent_plain"  # Default value
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -49,4 +51,4 @@ if [ "$NUM_AGENTS" -eq 0 ]; then
 fi
 
 # Use xargs to parallelize
-seq 0 $(($NUM_AGENTS - 1)) | xargs -I {} -P $NUM_AGENTS bash -c 'deploy_agent "$@"' _ {}
+seq 0 $(($NUM_AGENTS - 1)) | xargs -I {} -P $NUM_AGENTS bash -c 'deploy_agent "$@"' _ "${AGENT_MODE}" {}
