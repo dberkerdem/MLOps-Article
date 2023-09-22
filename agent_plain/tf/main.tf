@@ -8,9 +8,11 @@
     region = var.region
   }
 
-
+  data "aws_secretsmanager_secret_version" "my_secret" {
+    secret_id = "name_or_arn_of_your_secret"
+  }
   locals {
-    env_content = file("../.env")
+    clearml_conf = file("../clearml.conf")
   }
 
 
@@ -25,7 +27,7 @@
     ebs_block_device {
       device_name = "/dev/xvda"
       volume_type = "gp3"
-      volume_size = 20
+      volume_size = 10
     }
 
     user_data = <<-EOF
@@ -35,17 +37,7 @@
                 exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
                 # Convert .env content into environment variables and export them
-                echo "${local.env_content}" > /tmp/.env
-
-                while IFS='=' read -r key value; do
-                    # Skip empty lines or lines without '='
-                    if [[ -z "$key" || -z "$value" ]]; then
-                        continue
-                    fi
-
-                    # Using printf to safely handle values with special characters
-                    export "$key=$(printf '%q' "$value")"
-                done < /tmp/.env
+                echo "${local.clearml_conf}" > /home/ec2-user/clearml.conf
 
                 sudo yum update -y
                 sudo yum install -y python3-pip
