@@ -48,3 +48,13 @@ variable "clearml_config_s3_uri" {
   description = "S3 URI to clearml.conf file"
   type        = string
 }
+
+variable "clearml_agent_queue" {
+  description = "Queue that ClearML Agent to be registered to"
+  type        = string
+}
+
+variable "clearml_conf_path" {
+  description = "Path to clearml.conf file"
+  type        = string
+}
