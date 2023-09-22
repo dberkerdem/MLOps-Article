@@ -38,9 +38,11 @@ resource "aws_instance" "clearml_agent" {
 
               aws s3 cp ${var.clearml_config_s3_uri} ${var.clearml_conf_path}
               chmod 600 ${var.clearml_conf_path}
+              sudo sed -i 's/^    worker_id: ""$/    worker_id: "'${var.instance_name}'"/' ${var.clearml_conf_path}
+              sudo sed -i 's/^    worker_name: ""$/    worker_name: "'${var.instance_name}'"/' ${var.clearml_conf_path}
 
               sudo yum update -y
-              sudo yum install gcc gcc-c++ -y
+              sudo yum install gcc gcc-c++ cmake -y
               export CC=$(which gcc)
               export CXX=$(which g++)
               sudo yum install -y git
@@ -49,9 +51,9 @@ resource "aws_instance" "clearml_agent" {
               sudo pip install --upgrade pip
               sudo pip install clearml-agent==${var.clearml_agent_update_version}
               
-              export CLEARML_WORKER_NAME=${var.instance_name}
               
-              sudo python3 -m clearml_agent daemon --force-current-version --foreground
+              
+              sudo python3 -m clearml_agent daemon --force-current-version --detached --queue ${var.clearml_queue}
               EOF
 
   tags = {
