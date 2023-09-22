@@ -20,7 +20,7 @@ function deploy_agent() {
   fi
 
   # Apply the Terraform configuration
-  terraform apply -lock=false -auto-approve -var-file="common.tfvars" -var "instance_name=${INSTANCE_NAME}" -state="${STATE_DIR}/${INSTANCE_NAME}.tfstate"
+  terraform apply -auto-approve -var-file="common.tfvars" -var "instance_name=${INSTANCE_NAME}" -state="${STATE_DIR}/${INSTANCE_NAME}.tfstate"
 
   cd - || exit
 }
@@ -50,5 +50,6 @@ if [ "$NUM_AGENTS" -eq 0 ]; then
   exit 1
 fi
 
-# Use xargs to parallelize
-seq 0 $(($NUM_AGENTS - 1)) | xargs -I {} -P $NUM_AGENTS bash -c 'deploy_agent "$@"' _ "${AGENT_MODE}" {}
+for i in $(seq 0 $(($NUM_AGENTS - 1))); do
+  deploy_agent "${AGENT_MODE}" "${i}"
+done
