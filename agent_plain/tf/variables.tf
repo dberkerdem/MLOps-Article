@@ -39,7 +39,12 @@ variable "ami" {
 
 }
 
-variale "iam_instance_profile" {
+variable "iam_instance_profile" {
   description = "IAM instance profile to be used for the instance"
+  type        = string
+}
+
+variable "clearml_config_s3_uri" {
+  description = "S3 URI to clearml.conf file"
   type        = string
 }

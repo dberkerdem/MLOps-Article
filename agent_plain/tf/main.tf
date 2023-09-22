@@ -8,18 +8,6 @@ provider "aws" {
   region = var.region
 }
 
-resource "aws_s3_bucket" "config_bucket" {
-  bucket = "clearml-agent-config-bucket"
-  acl    = "private"
-}
-
-resource "aws_s3_object" "clearml_config" {
-  bucket = aws_s3_bucket.config_bucket.bucket
-  key    = "clearml.conf"
-  source = "../clearml.conf"
-  etag   = filemd5("../clearml.conf")
-}
-
 resource "aws_instance" "clearml_agent" {
   ami           = var.ami
   instance_type = var.instance_type
@@ -39,11 +27,12 @@ resource "aws_instance" "clearml_agent" {
               # Log
               exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
-              aws s3 cp s3://${aws_s3_bucket.config_bucket.bucket}/clearml.conf /root/clearml.conf
+              aws s3 cp ${var.clearml_config_s3_uri} /root/clearml.conf
               chmod 600 /root/clearml.conf
 
               sudo yum update -y
-              sudo yum install -y
+              sudo yum install -y git
+              export PATH=$PATH:/usr/bin
               sudo yum install -y python3-pip
               sudo pip install --upgrade pip
               sudo pip install clearml-agent==${var.clearml_agent_update_version}
