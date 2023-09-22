@@ -51,7 +51,7 @@ resource "aws_instance" "clearml_agent" {
               
               export CLEARML_WORKER_NAME=${var.instance_name}
               
-              sudo python3 -m clearml_agent daemon --force-current-version --foreground --queue ${var.clearml_agent_queue} --config-file ${var.clearml_conf_path}
+              sudo python3 -m clearml_agent daemon --force-current-version --foreground
               EOF
 
   tags = {
