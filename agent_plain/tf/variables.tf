@@ -32,3 +32,14 @@ variable "clearml_agent_update_version" {
   description = "Version of clearml-agent python package to be used"
   type        = string
 }
+
+variable "ami" {
+  description = "The AMI to use for the instance"
+  type        = string
+
+}
+
+variale "iam_instance_profile" {
+  description = "IAM instance profile to be used for the instance"
+  type        = string
+}

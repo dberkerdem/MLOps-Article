@@ -1,6 +1,8 @@
+ami                          = "ami-0648880541a3156f7"
 instance_type                = "t3.medium"
 security_group_name          = "launch-wizard-2"
 security_group_id            = "sg-08cd3ce3c53244046"
+iam_instance_profile         = "s3-read-only-profile_for_ec2"
 key_name                     = "test_1"
 region                       = "eu-west-1"
 clearml_agent_update_version = "1.6.1"
