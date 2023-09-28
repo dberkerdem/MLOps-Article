@@ -51,8 +51,6 @@ resource "aws_instance" "clearml_agent" {
               sudo pip install --upgrade pip
               sudo pip install clearml-agent==${var.clearml_agent_update_version}
               
-              
-              
               sudo python3 -m clearml_agent daemon --force-current-version --detached --queue ${var.clearml_queue}
               EOF
 

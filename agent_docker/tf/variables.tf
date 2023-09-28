@@ -18,11 +18,6 @@ variable "security_group_name" {
   type        = string
 }
 
-variable "repo_url" {
-  description = "The URL of the repository to be cloned on the instance"
-  type        = string
-}
-
 variable "instance_name" {
   description = "The name to associate with the launched instance"
   type        = string
@@ -33,7 +28,3 @@ variable "security_group_id" {
   type        = string
 }
 
-variable "docker_image" {
-  description = "Name of the docker image to be used as agent"
-  type        = string
-}
