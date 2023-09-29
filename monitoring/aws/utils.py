@@ -23,32 +23,6 @@ def init_client(service: str, region: str) -> client:
     return client
 
 
-def fetch_available_metrics(cloudwatch_client: client, instance_id: str, namespace: str) -> Dict:
-    """
-    Fetch available metrics for a given instance and namespace from CloudWatch.
-
-    Args:
-        cloudwatch_client (boto3.client): Initialized CloudWatch client.
-        instance_id (str): The EC2 instance ID.
-        namespace (str): The namespace for the metrics.
-
-    Returns:
-        dict: Dictionary containing the available metrics.
-    """
-    # List metrics through the CloudWatch API
-    metrics = cloudwatch_client.list_metrics(
-        Dimensions=[
-            {
-                'Name': 'InstanceId',
-                'Value': instance_id
-            }
-        ],
-        Namespace=namespace
-    )
-
-    return metrics
-
-
 def validate_time_range(end: Optional[datetime], minutes: Optional[int]) -> None:
     """
     Validate the time range parameters.
@@ -72,46 +46,68 @@ class TimeRangeException(Exception):
     pass
 
 
-def fetch_individual_metric(cloudwatch: client, metric: Dict, namespace: str, period: int, start: datetime, end: datetime) -> Dict:
+def fetch_cwagent_metrics(
+    cloudwatch_client: client,
+    host: str,
+    namespace: str,
+    period: int,
+    start_time: datetime,
+    end_time: datetime
+) -> List[Dict]:
     """
-    Fetch an individual metric from CloudWatch.
+    Fetch metrics from the CWAgent namespace based on a specific host.
 
     Args:
-        cloudwatch (boto3.client): Initialized CloudWatch client.
-        metric (Dict): The metric to fetch.
-        namespace (str): The namespace for the metric.
+        cloudwatch_client (boto3.client): Initialized CloudWatch client.
+        host (str): The host to filter metrics by.
+        namespace (str): The namespace for the metrics.
         period (int): The granularity, in seconds, of the returned data points.
-        start (datetime): The start time for fetching metrics.
-        end (datetime): The end time for fetching metrics.
+        start_time (datetime): The start time for fetching metrics.
+        end_time (datetime): The end time for fetching metrics.
 
     Returns:
-        Dict: The fetched metric data.
+        List[Dict]: List of dictionaries containing the fetched metrics.
     """
-    metric_data = cloudwatch.get_metric_data(
-        MetricDataQueries=[
+    metrics = cloudwatch_client.list_metrics(
+        Namespace=namespace,
+        Dimensions=[
             {
-                'Id': 'm1',
-                'MetricStat': {
-                    'Metric': {
-                        'Namespace': namespace,
-                        'MetricName': metric['MetricName'],
-                        'Dimensions': metric['Dimensions']
-                    },
-                    'Period': period,
-                    'Stat': 'Average'
-                },
-                'ReturnData': True,
-            },
-        ],
-        StartTime=start,
-        EndTime=end
+                'Name': 'host',
+                'Value': host
+            }
+        ]
     )
-    return metric_data
+
+    metric_data_list = []
+    for metric in metrics['Metrics']:
+        metric_data = cloudwatch_client.get_metric_data(
+            MetricDataQueries=[
+                {
+                    'Id': 'm1',
+                    'MetricStat': {
+                        'Metric': {
+                            'Namespace': 'CWAgent',
+                            'MetricName': metric['MetricName'],
+                            'Dimensions': metric['Dimensions']
+                        },
+                        'Period': period,
+                        'Stat': 'Average'
+                    },
+                    'ReturnData': True,
+                },
+            ],
+            StartTime=start_time,
+            EndTime=end_time
+        )
+        metric_data_list.append(metric_data)
+
+    return metric_data_list
 
 
 def fetch_metrics_of_ec2(
         run_id: str,
         instance_id: str,
+        host: str,
         namespace: str,
         region: str,
         period: int,
@@ -126,6 +122,7 @@ def fetch_metrics_of_ec2(
     Args:
         run_id (str): The run ID for the experiment.
         instance_id (str): The EC2 instance ID.
+        host (str): The host to filter metrics by.
         region (str): The AWS region.
         period (int): The granularity, in seconds, of the returned data points.
         start (datetime): The start time for fetching metrics.
@@ -143,49 +140,37 @@ def fetch_metrics_of_ec2(
 
     cloudwatch = init_client(service="cloudwatch", region=region)
 
-    available_metrics = fetch_available_metrics(
+    # Fetch
+    metric_data = fetch_cwagent_metrics(
         cloudwatch,
-        instance_id,
-        namespace
+        host,
+        namespace,
+        period,
+        start,
+        end
     )
 
-    metrics_data = []
-
-    for metric in available_metrics['Metrics']:
-        try:
-            # Fetch
-            metric_data = fetch_individual_metric(
-                cloudwatch,
-                metric,
-                namespace,
-                period,
-                start,
-                end
-            )
-            # Store
-            data_points = metric_data['MetricDataResults'][0]['Values']
-            timestamps = metric_data['MetricDataResults'][0]['Timestamps']
-            metric_entry = {
-                'MetricName': metric['MetricName'],
-                # 'Namespace': metric_namespace,
-                # 'DimensionName': dimension_name,
-                # 'DimensionValue': dimension_value,
-                'DataPoints': [{'Timestamp': str(timestamp), 'Value': value} for timestamp, value in zip(timestamps, data_points)]
-            }
-            metrics_data.append(metric_entry)
-        except Exception as e:
-            print(
-                f"Failed to fetch data for metric {metric['MetricName']}: {e}")
+    # Parse
+    metric_data_parsed = []
+    for metric in metric_data:
+        metric_name = metric["MetricDataResults"][0]['Label']
+        data_points = metric["MetricDataResults"][0]['Values']
+        timestamps = metric["MetricDataResults"][0]['Timestamps']
+        metric_entry = {
+            'MetricName': metric_name,
+            'DataPoints': [{'Timestamp': str(timestamp), 'Value': value} for timestamp, value in zip(timestamps, data_points)]
+        }
+        metric_data_parsed.append(metric_entry)
 
     if export_as == "json":
         output_path = export_as_json(
-            metrics=metrics_data,
+            metrics=metric_data_parsed,
             run_id=run_id,
             instance_id=instance_id
         )
     elif export_as == "parquet":
         output_path = export_as_parquet(
-            metrics=metrics_data,
+            metrics=metric_data_parsed,
             run_id=run_id,
             instance_id=instance_id
         )
