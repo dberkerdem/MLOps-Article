@@ -1,9 +1,0 @@
-boto3==1.28.46
-pyyaml==6.0
-pyarrow==13.0.0
-pandas==1.5.3
-ipykernel==6.21.1
-ipython==8.9.0
-jupyter==1.0.0
-jupyter_client==8.0.2
-jupyter-console==6.4.4

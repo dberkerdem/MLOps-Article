@@ -162,3 +162,7 @@ cython_debug/
 *.json
 *.parquet
 *secrets*
+*.env.sh
+
+*.terraform*
+*states

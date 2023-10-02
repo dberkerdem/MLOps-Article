@@ -36,7 +36,6 @@ variable "clearml_agent_update_version" {
 variable "ami" {
   description = "The AMI to use for the instance"
   type        = string
-
 }
 
 variable "iam_instance_profile" {
@@ -56,5 +55,15 @@ variable "clearml_agent_queue" {
 
 variable "clearml_conf_path" {
   description = "Path to clearml.conf file"
+  type        = string
+}
+
+variable "clearml_config_bucket_name" {
+  description = "Name of the s3 bucket that contains clearml.conf"
+  type        = string
+}
+
+variable "ec2_role_name" {
+  description = "Role name to be attached to EC2"
   type        = string
 }

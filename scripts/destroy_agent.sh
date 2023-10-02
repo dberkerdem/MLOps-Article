@@ -1,13 +1,16 @@
 #!/bin/bash
 
-function deploy_agent() {
+function destroy_agent() {
   local mode="$1"
   local instance_number="$2"
 
   INSTANCE_NAME="clearml-agent-${instance_number}"
   STATE_DIR="${PWD}/${mode}/tf/states/${INSTANCE_NAME}"
 
-  mkdir -p "${STATE_DIR}"
+  if [ ! -d "${STATE_DIR}" ]; then
+    echo "State directory for ${INSTANCE_NAME} not found. Skipping..."
+    return
+  fi
 
   cd ./${mode}/tf || exit
 
@@ -19,13 +22,13 @@ function deploy_agent() {
     return
   fi
 
-  # Apply the Terraform configuration
-  terraform apply -auto-approve -var-file="common.tfvars" -var "instance_name=${INSTANCE_NAME}" -state="${STATE_DIR}/${INSTANCE_NAME}.tfstate"
+  # Destroy the Terraform resources
+  terraform destroy -auto-approve -var-file="common.tfvars" -var "instance_name=${INSTANCE_NAME}" -state="${STATE_DIR}/${INSTANCE_NAME}.tfstate"
 
   cd - || exit
 }
 
-export -f deploy_agent
+export -f destroy_agent
 
 NUM_AGENTS=0
 AGENT_MODE="agent_plain"  # Default value
@@ -51,5 +54,6 @@ if [ "$NUM_AGENTS" -eq 0 ]; then
 fi
 
 for i in $(seq 0 $(($NUM_AGENTS - 1))); do
-  deploy_agent "${AGENT_MODE}" "${i}"
+  destroy_agent "${AGENT_MODE}" "${i}"
 done
+

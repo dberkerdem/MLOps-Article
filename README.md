@@ -23,6 +23,8 @@ Dive into the /agent_plain directory to discover the core of the ClearML agent. 
 ### Prequisites
 - ClearML server running
 - Bash shell (Unix/Linux/MacOS or Git Bash on Windows)
+- A S3 bucket
+- An IAM role with S3 read only access policy attached
 - clearml.conf file located under /agent_plain directory. [See official documentation](https://clear.ml/docs/latest/docs/clearml_agent#adding-clearml-agent-to-a-configuration-file) to learn more about creating configuration file.
 ### Setup
 See [Automated Deployment of ClearML Agents](#automated-deployment-of-clearml-agents) to learn more about how to spin up EC2 instances using terraform.
