@@ -1,0 +1,5 @@
+host: Private IPv4 address of the EC2 instance
+instance_id: ID of the EC2 instance
+namespace: Namespace of the metrics
+region: AWS region
+period: Retrieval period of the metrics 
